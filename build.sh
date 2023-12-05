@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -f /tmp/fogkern.img ]; then
+if [ -f /tmp/fos-usb.img ]; then
     echo Nuking old FOG Debug image
     rm -f /tmp/fos-usb.img
 fi
@@ -9,35 +9,36 @@ echo Make a blank 128MB disk image
 dd if=/dev/zero of=/tmp/fos-usb.img bs=1M count=128
  
 echo Make the partition table, partition and set it bootable.
-parted --script /tmp/fos-usb.img mklabel msdos mkpart p fat32 1 128 set 1 boot on
+parted --script /tmp/fos-usb.img mklabel msdos mkpart primary fat32 1 128 set 1 boot on
  
 echo Map the partitions from the image file
 kpartx -a -s /tmp/fos-usb.img
 LOOPDEV=$(losetup -a | grep "/tmp/fos-usb.img" | grep -o "loop[0-9]*")
+
  
 echo Make an vfat filesystem on the first partition.
 mkfs -t vfat -n GRUB /dev/mapper/${LOOPDEV}p1
  
 echo Mount the filesystem via loopback
-mount /dev/mapper/${LOOPDEV}p1 /mnt
+mount /dev/mapper/${LOOPDEV}p1 $MOUNT
 
 echo Install GRUB
-grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=/mnt --boot-directory=/mnt/boot --target=i386-efi
-grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=/mnt --boot-directory=/mnt/boot --target=x86_64-efi
-grub-install --removable --no-floppy --boot-directory=/mnt/boot --target=i386-pc /dev/${LOOPDEV}
+grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=$MOUNT --boot-directory=$MOUNT/boot --target=i386-efi
+grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=$MOUNT --boot-directory=$MOUNT/boot --target=x86_64-efi
+grub-install --removable --no-floppy --boot-directory=$MOUNT/boot --target=i386-pc /dev/${LOOPDEV}
 
 echo Download the FOG kernels and inits
-wget -P /mnt/boot/ https://github.com/FOGProject/fos/releases/download/20230331/bzImage
-wget -P /mnt/boot/ https://github.com/FOGProject/fos/releases/download/20230331/bzImage32
-wget -P /mnt/boot/ https://github.com/FOGProject/fos/releases/download/20230331/init.xz
-wget -P /mnt/boot/ https://github.com/FOGProject/fos/releases/download/20230331/init_32.xz
-wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/web/service/ipxe/memdisk
-wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/web/service/ipxe/memtest.bin
-wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/tftp/ipxe.krn
-wget -P /mnt/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/tftp/ipxe.efi
+wget -P $MOUNT/boot/ https://github.com/FOGProject/fos/releases/download/20230331/bzImage
+wget -P $MOUNT/boot/ https://github.com/FOGProject/fos/releases/download/20230331/bzImage32
+wget -P $MOUNT/boot/ https://github.com/FOGProject/fos/releases/download/20230331/init.xz
+wget -P $MOUNT/boot/ https://github.com/FOGProject/fos/releases/download/20230331/init_32.xz
+wget -P $MOUNT/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/web/service/ipxe/memdisk
+wget -P $MOUNT/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/web/service/ipxe/memtest.bin
+wget -P $MOUNT/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/tftp/ipxe.krn
+wget -P $MOUNT/boot/ https://github.com/FOGProject/fogproject/blob/dev-branch/packages/tftp/ipxe.efi
 
 echo Create the grub configuration file
-cat > /mnt/boot/grub/grub.cfg << 'EOF'
+cat > $MOUNT/boot/grub/grub.cfg << 'EOF'
 
 set myfogip=http://192.168.1.100
 set myimage=/boot/bzImage
@@ -107,7 +108,8 @@ menuentry "8. FOG iPXE Jumpstart EFI" {
 EOF
  
 echo Unmount the loopback
-umount /mnt
+umount $MOUNT
+rmdir $MOUNT
  
 echo Unmap the image
 kpartx -d /tmp/fos-usb.img
