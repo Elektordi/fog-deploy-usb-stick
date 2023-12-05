@@ -69,6 +69,3 @@ rmdir $MOUNT
  
 echo Unmap the image
 kpartx -d /tmp/fos-usb.img
- 
-# Write the file to flash drive
-# sudo dd bs=1M if=/tmp/fos-usb.img of=/dev/sdX
