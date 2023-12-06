@@ -1,0 +1,37 @@
+#!/bin/bash
+
+mkdir /images
+mount /dev/disk/by-label/IMAGES /images -o ro -t ext2
+
+
+if [[ ! -z $isdebug ]]; then
+    echo "DEBUG MODE"
+    echo "(Exit bash to continue)"
+    bash
+fi
+
+
+cd /images
+echo "Select image to restore:"
+select d in $(ls | grep -v lost+found); do test -n "$d" && break; echo ">>> Invalid Selection"; done
+export img=$(basename $d)
+
+echo "" > /bin/fog.checkin
+echo "" > /bin/fog.mount
+echo "" > /bin/fog.checkmount
+echo "" > /bin/fog.inventory
+echo "" > /bin/fog.statusreporter
+echo "" > /bin/fog.imgcomplete
+
+fog.download
+
+if [[ -z $isdebug ]]; then
+    echo "##############################################################################"
+    echo "#                                                                            #"
+    echo "#                      Computer will reboot in 1 minute                      #"
+    echo "#                                                                            #"
+    echo "##############################################################################"
+    usleep 60000000
+    reboot
+fi
+
