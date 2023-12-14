@@ -25,8 +25,15 @@ export img=$(basename $d)
 export type=down
 export imgType=n
 export osid=9  # Windows 10, check /usr/share/fog/lib/funcs.sh for values
-export imgFormat=0
+export imgFormat=5
 export imgPartitionType=all
+
+if [[ -f "custom.sh" ]]; then
+    source custom.sh
+fi
+if [[ -f "$img/custom.sh" ]]; then
+    source $img/custom.sh
+fi
 
 echo "" > /bin/fog.checkin
 echo "" > /bin/fog.mount
