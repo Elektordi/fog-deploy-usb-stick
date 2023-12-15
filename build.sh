@@ -46,7 +46,7 @@ echo Make a blank disk image
 dd if=/dev/zero of=cache/fos-usb.img bs=1M count=256
  
 echo Make the partition table, partition and set it bootable.
-parted --script cache/fos-usb.img mklabel msdos mkpart primary ext2 1 128 set 1 boot on mkpart primary ntfs 129 256
+parted --script cache/fos-usb.img mklabel msdos mkpart primary fat32 1 128 set 1 boot on mkpart primary ntfs 129 256
 
 echo Map the partitions from the image file
 kpartx -a -s cache/fos-usb.img
@@ -58,7 +58,7 @@ if [ -z "${LOOPDEV}" ]; then
 fi
  
 echo Make filesystems
-mkfs -t ext2 -L GRUB /dev/mapper/${LOOPDEV}p1
+mkfs -t vfat -n GRUB /dev/mapper/${LOOPDEV}p1
 mkfs -t ntfs -L IMAGES /dev/mapper/${LOOPDEV}p2
 # fstab: LABEL=IMAGES
  
@@ -72,7 +72,7 @@ fi
 
 echo Install GRUB
 #grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=$MOUNT --boot-directory=$MOUNT/boot --target=i386-efi
-#grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=$MOUNT --boot-directory=$MOUNT/boot --target=x86_64-efi
+grub-install --removable --no-nvram --no-uefi-secure-boot --efi-directory=$MOUNT --boot-directory=$MOUNT/boot --target=x86_64-efi
 grub-install --removable --no-floppy --boot-directory=$MOUNT/boot --target=i386-pc /dev/${LOOPDEV}
 
 echo Copy boot files
