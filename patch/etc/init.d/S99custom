@@ -10,6 +10,14 @@ if [[ ! -z $isdebug ]]; then
     bash
 fi
 
+if [ ! -e /dev/sdb  ] &&  [ ! -e /dev/nvme0n1 ]; then
+    if [[ ! -z $isdebug ]]; then
+        echo "No disk found. Take care..."
+    else
+        echo "No disk found. Cannot continue..."
+        exit 1
+    fi
+fi
 
 cd /images
 echo "Select image to restore:"
