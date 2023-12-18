@@ -35,13 +35,6 @@ if [[ -f "$img/custom.sh" ]]; then
     source $img/custom.sh
 fi
 
-echo "" > /bin/fog.checkin
-echo "" > /bin/fog.mount
-echo "" > /bin/fog.checkmount
-echo "" > /bin/fog.inventory
-echo "" > /bin/fog.statusreporter
-echo "" > /bin/fog.imgcomplete
-
 fog.download
 
 if [[ -z $isdebug ]]; then
