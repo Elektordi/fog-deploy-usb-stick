@@ -13,7 +13,7 @@ fi
 
 cd /images
 echo "Select image to restore:"
-select d in $(ls -1dN -- */); do test -n "$d" && break; echo ">>> Invalid Selection"; done
+select d in $(ls -1dN -- */ | grep -v "System Volume Information" | grep -v  "^\\$"); do test -n "$d" && break; echo ">>> Invalid Selection"; done
 
 if [[ -z $d ]]; then
     echo "No image found. Cannot continue..."
